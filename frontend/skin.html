@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Skin Cancer Scanner — MediScan AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&family=Mulish:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c10;--surface:#0e1318;--card:#131a22;
+  --border:#1e2b38;--border2:#253444;
+  --ink:#e8edf2;--muted:#5a7080;--dim:#324455;
+  --accent:#e05c3a;--accent-dim:rgba(224,92,58,0.1);
+  --green:#2ecc71;--green-dim:#1a4a2e;
+  --red:#e05c3a;--red-dim:#4a1a0e;
+}
+body{font-family:'Mulish',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:0.2;pointer-events:none;z-index:0}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1rem 3rem;border-bottom:1px solid var(--border);background:rgba(8,12,16,0.9);backdrop-filter:blur(16px)}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--ink);text-decoration:none;letter-spacing:-0.02em}
+.logo em{color:var(--accent);font-style:normal}
+.nav-back{font-family:'Syne Mono',monospace;font-size:0.68rem;color:var(--muted);text-decoration:none;letter-spacing:0.06em;transition:color 0.2s}
+.nav-back:hover{color:var(--ink)}
+
+.main{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:7rem 2rem 4rem}
+.page-top{margin-bottom:3rem}
+.page-tag{font-family:'Syne Mono',monospace;font-size:0.68rem;letter-spacing:0.12em;color:var(--accent);margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem}
+.page-tag::before{content:'';width:1.5rem;height:1px;background:var(--accent)}
+.page-title{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(2.5rem,6vw,5rem);letter-spacing:-0.03em;line-height:0.95;margin-bottom:1rem}
+.page-sub{font-size:0.88rem;color:var(--muted);line-height:1.8;max-width:500px;font-weight:300}
+.badges{display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:1rem}
+.badge{font-family:'Syne Mono',monospace;font-size:0.6rem;padding:0.2rem 0.6rem;border-radius:0.25rem;border:1px solid var(--border2);color:var(--dim);letter-spacing:0.05em}
+
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start}
+
+/* UPLOAD PANEL */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:1rem;padding:1.75rem;position:sticky;top:7rem}
+.panel-title{font-family:'Syne Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;color:var(--dim);text-transform:uppercase;margin-bottom:1.25rem}
+
+/* API input */
+.api-row{display:flex;gap:0.5rem;margin-bottom:1.5rem;align-items:center}
+.api-label{font-family:'Syne Mono',monospace;font-size:0.6rem;color:var(--muted);white-space:nowrap;letter-spacing:0.05em}
+.api-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:0.4rem;padding:0.5rem 0.75rem;font-family:'Syne Mono',monospace;font-size:0.7rem;color:var(--ink);transition:border-color 0.2s}
+.api-input:focus{outline:none;border-color:var(--accent)}
+
+/* Drop zone */
+.drop{border:1px dashed var(--border2);border-radius:0.75rem;padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;position:relative;overflow:hidden}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-dim)}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.drop-icon{font-size:2rem;margin-bottom:0.75rem;display:block}
+.drop-main{font-family:'Syne',sans-serif;font-weight:600;font-size:0.9rem;margin-bottom:0.25rem}
+.drop-sub{font-size:0.75rem;color:var(--muted);font-weight:300}
+.drop-hint{font-family:'Syne Mono',monospace;font-size:0.6rem;color:var(--dim);margin-top:0.75rem;letter-spacing:0.05em}
+
+.preview{margin-top:1.25rem;display:none}
+.preview img{width:100%;border-radius:0.6rem;max-height:240px;object-fit:cover;border:1px solid var(--border)}
+.preview-name{font-family:'Syne Mono',monospace;font-size:0.6rem;color:var(--dim);margin-top:0.5rem}
+
+.btn-predict{
+  width:100%;margin-top:1.25rem;padding:0.9rem;
+  background:var(--accent);color:#fff;border:none;border-radius:0.5rem;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;
+  cursor:pointer;transition:transform 0.2s,opacity 0.2s,box-shadow 0.2s;
+  display:flex;align-items:center;justify-content:center;gap:0.6rem;
+  letter-spacing:0.02em;
+}
+.btn-predict:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 30px rgba(224,92,58,0.35)}
+.btn-predict:disabled{opacity:0.35;cursor:not-allowed}
+.btn-clear{width:100%;margin-top:0.6rem;padding:0.7rem;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:0.5rem;font-family:'Mulish',sans-serif;font-size:0.82rem;cursor:pointer;transition:color 0.2s,border-color 0.2s;display:none}
+.btn-clear:hover{color:var(--ink);border-color:var(--border2)}
+
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.25);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* RESULTS PANEL */
+.results{background:var(--card);border:1px solid var(--border);border-radius:1rem;padding:1.75rem;min-height:400px}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:360px;color:var(--dim);text-align:center}
+.empty-icon{font-size:3rem;opacity:0.3;margin-bottom:1rem}
+.empty-text{font-size:0.82rem;line-height:1.7;font-weight:300}
+
+/* Result content */
+.r-tag{display:inline-block;font-family:'Syne Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;padding:0.3rem 0.8rem;border-radius:0.25rem;margin-bottom:1.25rem}
+.r-tag.pos{background:rgba(224,92,58,0.15);color:#e08060;border:1px solid rgba(224,92,58,0.25)}
+.r-tag.neg{background:var(--green-dim);color:var(--green);border:1px solid rgba(46,204,113,0.2)}
+.r-label{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;letter-spacing:-0.02em;margin-bottom:0.25rem}
+.r-sub{font-size:0.78rem;color:var(--muted);font-weight:300;margin-bottom:2rem}
+.r-divider{width:100%;height:1px;background:var(--border);margin:1.5rem 0}
+
+.conf-head{font-family:'Syne Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:0.6rem}
+.conf-num{font-family:'Syne',sans-serif;font-weight:800;font-size:3rem;letter-spacing:-0.03em;color:var(--accent);line-height:1;margin-bottom:0.6rem}
+.conf-bar-wrap{background:var(--surface);border-radius:999px;height:6px;overflow:hidden;margin-bottom:0.5rem}
+.conf-bar{height:100%;background:var(--accent);border-radius:999px;transition:width 1.2s cubic-bezier(0.4,0,0.2,1);width:0%}
+.conf-desc{font-size:0.75rem;color:var(--muted);font-weight:300}
+
+.breakdown-head{font-family:'Syne Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-top:1.5rem;margin-bottom:0.85rem}
+.cls-row{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.55rem}
+.cls-name{font-size:0.75rem;min-width:130px;color:var(--ink);font-weight:400}
+.cls-bar-bg{flex:1;background:var(--surface);border-radius:999px;height:5px;overflow:hidden}
+.cls-bar{height:100%;background:var(--accent);border-radius:999px;opacity:0.35;transition:width 0.9s ease}
+.cls-bar.top{opacity:1}
+.cls-pct{font-family:'Syne Mono',monospace;font-size:0.62rem;color:var(--dim);min-width:42px;text-align:right}
+
+.disclaimer{margin-top:1.5rem;padding:0.9rem;background:rgba(184,160,42,0.06);border:1px solid rgba(184,160,42,0.15);border-radius:0.5rem;font-size:0.72rem;color:#b8a02a;line-height:1.6}
+
+.err-wrap{text-align:center;padding:3rem 1rem}
+.err-icon{font-size:2rem;margin-bottom:0.75rem}
+.err-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:0.5rem}
+.err-msg{font-size:0.78rem;color:var(--muted);line-height:1.6}
+
+@media(max-width:768px){nav{padding:1rem 1.5rem}.main{padding:6rem 1.25rem 3rem}.layout{grid-template-columns:1fr}.panel{position:static}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Medi<em>Scan</em></a>
+  <a href="index.html" class="nav-back">← Home</a>
+</nav>
+
+<main class="main">
+  <div class="page-top">
+    <p class="page-tag">Module 01</p>
+    <h1 class="page-title">Skin Cancer<br/>Scanner</h1>
+    <p class="page-sub">Upload a dermoscopic lesion image. The 3-model ensemble will classify it and return confidence scores.</p>
+    <div class="badges">
+      <span class="badge">EfficientNetV2M</span>
+      <span class="badge">EfficientNetV2S</span>
+      <span class="badge">ConvNeXt</span>
+      <span class="badge">AUROC 0.9609</span>
+      <span class="badge">7 Classes</span>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- LEFT -->
+    <div class="panel">
+      <p class="panel-title">Upload Image</p>
+
+      <div class="api-row">
+        <span class="api-label">API →</span>
+        <input class="api-input" id="apiUrl" type="text" value="https://saswatML123-medscan-api.hf.space/predict/skin"/>
+      </div>
+
+      <div class="drop" id="drop">
+        <input type="file" id="fileInput" accept="image/*"/>
+        <span class="drop-icon">🔬</span>
+        <p class="drop-main">Drop dermoscopic image</p>
+        <p class="drop-sub">or click to browse files</p>
+        <p class="drop-hint">JPG · PNG · WEBP · up to 10MB</p>
+      </div>
+
+      <div class="preview" id="preview">
+        <img id="previewImg" src="" alt="preview"/>
+        <p class="preview-name" id="previewName"></p>
+      </div>
+
+      <button class="btn-predict" id="predictBtn" disabled onclick="runPredict()">
+        <span id="btnText">Select an image first</span>
+        <div class="spinner" id="spinner"></div>
+      </button>
+      <button class="btn-clear" id="clearBtn" onclick="clearAll()">✕ Clear</button>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="results" id="results">
+      <div class="empty" id="empty">
+        <div class="empty-icon">📊</div>
+        <p class="empty-text">Upload an image and hit<br/><strong>Predict</strong> to see results.</p>
+      </div>
+      <div id="resultContent" style="display:none"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const drop=document.getElementById('drop');
+const fileInput=document.getElementById('fileInput');
+const preview=document.getElementById('preview');
+const previewImg=document.getElementById('previewImg');
+const previewName=document.getElementById('previewName');
+const predictBtn=document.getElementById('predictBtn');
+const clearBtn=document.getElementById('clearBtn');
+const btnText=document.getElementById('btnText');
+const spinner=document.getElementById('spinner');
+const empty=document.getElementById('empty');
+const resultContent=document.getElementById('resultContent');
+let file=null;
+
+fileInput.addEventListener('change',e=>handleFile(e.target.files[0]));
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over')});
+drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');handleFile(e.dataTransfer.files[0])});
+
+function handleFile(f){
+  if(!f||!f.type.startsWith('image/'))return;
+  file=f;
+  const r=new FileReader();
+  r.onload=e=>{previewImg.src=e.target.result};
+  r.readAsDataURL(f);
+  previewName.textContent=f.name+' · '+(f.size/1024).toFixed(1)+' KB';
+  preview.style.display='block';
+  predictBtn.disabled=false;
+  btnText.textContent='Run Prediction';
+  clearBtn.style.display='block';
+}
+
+function clearAll(){
+  file=null; fileInput.value='';
+  preview.style.display='none'; previewImg.src='';
+  predictBtn.disabled=true; btnText.textContent='Select an image first';
+  clearBtn.style.display='none';
+  empty.style.display='flex'; resultContent.style.display='none'; resultContent.innerHTML='';
+}
+
+async function runPredict(){
+  if(!file)return;
+  btnText.textContent='Analysing…'; spinner.style.display='block'; predictBtn.disabled=true;
+  const fd=new FormData(); fd.append('file',file);
+  const url=document.getElementById('apiUrl').value;
+  try{
+    const res=await fetch(url,{method:'POST',body:fd});
+    if(!res.ok)throw new Error('Server responded '+res.status);
+    const data=await res.json();
+    showResult(data);
+  }catch(e){showError(e.message)}
+  finally{btnText.textContent='Predict Again';spinner.style.display='none';predictBtn.disabled=false}
+}
+
+function showResult(d){
+  const label=d.label||d.prediction||'Unknown';
+  const conf=d.confidence??d.score??0;
+  const probs=d.probabilities||{};
+  const bad=/melanoma|carcinoma|malignant/i.test(label);
+  let breakdown='';
+  if(Object.keys(probs).length){
+    const sorted=Object.entries(probs).sort((a,b)=>b[1]-a[1]);
+    breakdown=`<p class="breakdown-head">Class Breakdown</p>`;
+    sorted.forEach(([cls,p],i)=>{
+      const pct=(p*100).toFixed(1);
+      breakdown+=`<div class="cls-row">
+        <span class="cls-name">${cls}</span>
+        <div class="cls-bar-bg"><div class="cls-bar${i===0?' top':''}" style="width:${pct}%"></div></div>
+        <span class="cls-pct">${pct}%</span>
+      </div>`;
+    });
+  }
+  resultContent.innerHTML=`
+    <span class="r-tag ${bad?'pos':'neg'}">${bad?'⚠ POSITIVE FINDING':'✓ BENIGN FINDING'}</span>
+    <p class="r-label">${label}</p>
+    <p class="r-sub">Top ensemble prediction</p>
+    <p class="conf-head">Confidence</p>
+    <p class="conf-num">${(conf*100).toFixed(1)}%</p>
+    <div class="conf-bar-wrap"><div class="conf-bar" id="cBar"></div></div>
+    <p class="conf-desc">Average across ${d.model_count||3} models</p>
+    ${breakdown}
+    <div class="disclaimer">⚠ Research tool only. Not a substitute for professional dermatological diagnosis.</div>
+  `;
+  empty.style.display='none'; resultContent.style.display='block';
+  setTimeout(()=>{document.getElementById('cBar').style.width=(conf*100).toFixed(1)+'%'},80);
+}
+
+function showError(msg){
+  resultContent.innerHTML=`<div class="err-wrap">
+    <div class="err-icon">⚠️</div>
+    <p class="err-title">Prediction Failed</p>
+    <p class="err-msg">${msg}<br/><br/>Is your backend running?<br/><code style="font-size:0.7rem;color:var(--dim)">cd AIHosp/backend && python main.py</code></p>
+  </div>`;
+  empty.style.display='none'; resultContent.style.display='block';
+}
+</script>
+</body>
+</html>

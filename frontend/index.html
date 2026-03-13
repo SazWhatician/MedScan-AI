@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MediScan AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&family=Mulish:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c10;--surface:#0e1318;--card:#131a22;
+  --border:#1e2b38;--border2:#253444;
+  --ink:#e8edf2;--muted:#5a7080;--dim:#324455;
+  --skin:#e05c3a;--pneumo:#3a8fe0;
+  --green:#2ecc71;--green-dim:#1a4a2e;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Mulish',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden}
+
+/* GRID BG */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:60px 60px;opacity:0.25;pointer-events:none;z-index:0;
+}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 3rem;
+  border-bottom:1px solid var(--border);
+  background:rgba(8,12,16,0.85);backdrop-filter:blur(16px);
+}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.25rem;color:var(--ink);text-decoration:none;letter-spacing:-0.02em}
+.logo em{color:var(--skin);font-style:normal}
+.nav-pill{font-family:'Syne Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;color:var(--muted);border:1px solid var(--border2);padding:0.3rem 0.8rem;border-radius:999px}
+
+/* HERO */
+.hero{
+  position:relative;z-index:1;
+  min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+  padding:8rem 3rem 5rem;max-width:1200px;margin:0 auto;
+}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  font-family:'Syne Mono',monospace;font-size:0.7rem;letter-spacing:0.12em;
+  color:var(--skin);margin-bottom:2rem;
+}
+.hero-tag::before{content:'';width:1.5rem;height:1px;background:var(--skin)}
+.hero-h1{
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:clamp(3.5rem,9vw,8rem);line-height:0.92;
+  letter-spacing:-0.04em;margin-bottom:2.5rem;
+}
+.hero-h1 .line2{
+  -webkit-text-stroke:1px var(--border2);
+  color:transparent;
+  display:block;
+}
+.hero-h1 .line3{color:var(--skin);display:block}
+.hero-desc{font-size:1rem;color:var(--muted);max-width:440px;line-height:1.8;font-weight:300;margin-bottom:3rem}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap}
+
+.btn{
+  display:inline-flex;align-items:center;gap:0.6rem;
+  font-family:'Syne',sans-serif;font-weight:600;font-size:0.85rem;
+  padding:0.9rem 2rem;border-radius:0.5rem;text-decoration:none;
+  transition:transform 0.2s,box-shadow 0.2s;letter-spacing:0.02em;
+}
+.btn:hover{transform:translateY(-3px)}
+.btn-skin{background:var(--skin);color:#fff;box-shadow:0 0 30px rgba(224,92,58,0.3)}
+.btn-skin:hover{box-shadow:0 0 50px rgba(224,92,58,0.5)}
+.btn-pneumo{background:transparent;color:var(--pneumo);border:1px solid var(--pneumo)}
+.btn-pneumo:hover{background:rgba(58,143,224,0.08)}
+
+/* STATS ROW */
+.stats{
+  position:relative;z-index:1;
+  max-width:1200px;margin:0 auto;padding:0 3rem 6rem;
+  display:flex;gap:1px;border:1px solid var(--border);border-radius:1rem;overflow:hidden;
+}
+.stat{flex:1;padding:2rem;background:var(--surface)}
+.stat+.stat{border-left:1px solid var(--border)}
+.stat-num{font-family:'Syne',sans-serif;font-weight:800;font-size:2.5rem;letter-spacing:-0.03em;margin-bottom:0.4rem}
+.stat-label{font-family:'Syne Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase}
+
+/* MODULES */
+.section{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:2rem 3rem 6rem}
+.section-head{
+  display:flex;align-items:center;gap:1rem;
+  font-family:'Syne Mono',monospace;font-size:0.68rem;letter-spacing:0.12em;
+  color:var(--muted);text-transform:uppercase;margin-bottom:2.5rem;
+}
+.section-head::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.25rem}
+.card{
+  background:var(--card);border:1px solid var(--border);border-radius:1rem;
+  padding:2rem;text-decoration:none;color:var(--ink);
+  position:relative;overflow:hidden;
+  transition:transform 0.25s,border-color 0.25s,box-shadow 0.25s;
+  display:block;
+}
+.card:not(.disabled):hover{transform:translateY(-5px);border-color:var(--border2);box-shadow:0 20px 60px rgba(0,0,0,0.4)}
+.card.disabled{opacity:0.4;pointer-events:none;cursor:default}
+
+.card-glow{
+  position:absolute;top:-60px;right:-60px;
+  width:180px;height:180px;border-radius:50%;
+  filter:blur(60px);opacity:0.12;
+}
+.card-num{font-family:'Syne Mono',monospace;font-size:0.65rem;color:var(--dim);margin-bottom:1.5rem}
+.card-icon{font-size:2.2rem;margin-bottom:1.25rem;display:block}
+.card-status{
+  display:inline-block;font-family:'Syne Mono',monospace;font-size:0.6rem;
+  letter-spacing:0.1em;padding:0.2rem 0.6rem;border-radius:999px;margin-bottom:1rem;
+}
+.status-ready{background:var(--green-dim);color:var(--green);border:1px solid rgba(46,204,113,0.2)}
+.status-soon{background:#1a1a0a;color:#b8a02a;border:1px solid rgba(184,160,42,0.2)}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.7rem;letter-spacing:-0.02em;margin-bottom:0.6rem}
+.card-desc{font-size:0.82rem;color:var(--muted);line-height:1.7;font-weight:300}
+.card-arrow{
+  position:absolute;bottom:1.5rem;right:1.5rem;
+  font-family:'Syne Mono',monospace;font-size:0.9rem;color:var(--dim);
+  transition:color 0.2s,transform 0.2s;
+}
+.card:not(.disabled):hover .card-arrow{color:var(--ink);transform:translate(4px,-4px)}
+
+footer{
+  position:relative;z-index:1;
+  border-top:1px solid var(--border);
+  padding:2rem 3rem;max-width:1200px;margin:0 auto;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;
+}
+.foot-logo{font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;color:var(--dim);text-decoration:none}
+.foot-mono{font-family:'Syne Mono',monospace;font-size:0.6rem;color:var(--dim);letter-spacing:0.06em}
+
+/* ANIMATIONS */
+.fade{opacity:0;transform:translateY(30px);animation:fadeUp 0.8s ease forwards}
+.fade:nth-child(1){animation-delay:0.05s}.fade:nth-child(2){animation-delay:0.15s}
+.fade:nth-child(3){animation-delay:0.25s}.fade:nth-child(4){animation-delay:0.35s}
+.fade:nth-child(5){animation-delay:0.45s}
+@keyframes fadeUp{to{opacity:1;transform:none}}
+
+@media(max-width:768px){
+  nav{padding:1rem 1.5rem}
+  .hero{padding:7rem 1.5rem 4rem}
+  .stats{flex-direction:column;padding:0 1.5rem 4rem}
+  .stat+.stat{border-left:none;border-top:1px solid var(--border)}
+  .section{padding:2rem 1.5rem 4rem}
+  footer{padding:2rem 1.5rem}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">Medi<em>Scan</em></a>
+  <span class="nav-pill">BETA v0.1 · Research Only</span>
+</nav>
+
+<section class="hero">
+  <p class="hero-tag fade">Hospital AI Diagnostic Platform</p>
+  <h1 class="hero-h1 fade">
+    See what<br/>
+    <span class="line2">doctors</span>
+    <span class="line3">can't.</span>
+  </h1>
+  <p class="hero-desc fade">Deep learning models for medical image analysis. Upload. Predict. Understand. Built on state-of-the-art CNN ensembles.</p>
+  <div class="hero-btns fade">
+    <a href="skin.html" class="btn btn-skin">🔬 Skin Cancer Scanner</a>
+    <a href="pneumonia.html" class="btn btn-pneumo">🫁 Pneumonia Detector</a>
+  </div>
+</section>
+
+<div class="stats">
+  <div class="stat">
+    <p class="stat-num" style="color:var(--skin)">96.09%</p>
+    <p class="stat-label">Skin Cancer AUROC</p>
+  </div>
+  <div class="stat">
+    <p class="stat-num" style="color:var(--pneumo)">CNN</p>
+    <p class="stat-label">Pneumonia Architecture</p>
+  </div>
+  <div class="stat">
+    <p class="stat-num" style="color:var(--green)">3</p>
+    <p class="stat-label">Ensemble Models</p>
+  </div>
+  <div class="stat">
+    <p class="stat-num" style="color:#b8a02a">4</p>
+    <p class="stat-label">Total Modules Planned</p>
+  </div>
+</div>
+
+<section class="section">
+  <p class="section-head">Diagnostic Modules</p>
+  <div class="cards">
+
+    <a href="skin.html" class="card">
+      <div class="card-glow" style="background:var(--skin)"></div>
+      <p class="card-num">01 / 04</p>
+      <span class="card-icon">🔬</span>
+      <span class="card-status status-ready">● LIVE</span>
+      <h2 class="card-title">Skin Cancer</h2>
+      <p class="card-desc">EfficientNetV2M + EfficientNetV2S + ConvNeXt ensemble. Classifies dermoscopic images across 7 lesion types. AUROC 0.9609.</p>
+      <span class="card-arrow">↗</span>
+    </a>
+
+    <a href="pneumonia.html" class="card">
+      <div class="card-glow" style="background:var(--pneumo)"></div>
+      <p class="card-num">02 / 04</p>
+      <span class="card-icon">🫁</span>
+      <span class="card-status status-ready">● LIVE</span>
+      <h2 class="card-title">Pneumonia</h2>
+      <p class="card-desc">Custom Sequential CNN trained on chest X-rays. Binary classification: Normal vs Pneumonia.</p>
+      <span class="card-arrow">↗</span>
+    </a>
+
+    <div class="card disabled">
+      <p class="card-num">03 / 04</p>
+      <span class="card-icon">🩸</span>
+      <span class="card-status status-soon">○ SOON</span>
+      <h2 class="card-title">Diabetes</h2>
+      <p class="card-desc">ANN-based risk prediction from patient biomarkers and clinical indicators.</p>
+    </div>
+
+    <div class="card disabled">
+      <p class="card-num">04 / 04</p>
+      <span class="card-icon">❤️</span>
+      <span class="card-status status-soon">○ SOON</span>
+      <h2 class="card-title">Heart Disease</h2>
+      <p class="card-desc">Cardiovascular risk ANN on structured clinical data.</p>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <a href="index.html" class="foot-logo">MediScan AI</a>
+  <p class="foot-mono">Models on HuggingFace · For research use only · Not a medical device</p>
+</footer>
+
+</body>
+</html>
