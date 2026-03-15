@@ -13,9 +13,9 @@ CACHE_DIR = "/app/model_cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  PNEUMONIA — Keras .h5
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 PNEUMO_REPO   = "SaswatML123/PneuModel"
 PNEUMO_FILE   = "pneumodel.h5"
@@ -72,9 +72,9 @@ def predict_pneumonia(image: Image.Image) -> dict:
     }
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  SKIN CANCER — exact same architecture as Colab training
-# ══════════════════════════════════════════════════════════════════════════════
+
+#  SKIN CANCER 
+
 
 SKIN_REPO  = "SaswatML123/Skin_cancer_detection"
 SKIN_FILES = {
@@ -83,7 +83,7 @@ SKIN_FILES = {
     "convnext":        ("model3_convnext.pth",         "convnext_base"),
 }
 
-# Alphabetical sorted order — matches CLASS_NAMES = sorted(df['dx'].unique())
+
 SKIN_CLASSES = [
     "Actinic Keratoses",    # akiec — index 0
     "Basal Cell Carcinoma", # bcc   — index 1
@@ -98,7 +98,7 @@ _skin_models     = []
 SKIN_TRANSFORM   = None
 
 
-# ── Exact replica of Colab SkinCancerModel ────────────────────────────────────
+
 def _build_skin_model(model_name: str):
     import torch
     import torch.nn as nn
@@ -155,14 +155,14 @@ def load_skin_models():
     import albumentations as A
     from albumentations.pytorch import ToTensorV2
 
-    # Exact same transforms as Colab get_val_transforms(300)
+    
     _albu_transform = A.Compose([
         A.Resize(height=300, width=300),
         A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ToTensorV2(),
     ])
 
-    # Store as a wrapper function
+    
     def transform_fn(pil_img):
         img_np = np.array(pil_img.convert("RGB"))
         return _albu_transform(image=img_np)["image"].unsqueeze(0)
@@ -189,9 +189,9 @@ def load_skin_models():
     print(f"[Skin] Ensemble ready — {len(_skin_models)} models")
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
 #  DIABETES — Keras ANN
-# ══════════════════════════════════════════════════════════════════════════════
+
 
 DIABETES_REPO         = "SaswatML123/DiabetesModel"
 DIABETES_MODEL_FILE   = "diabetes_model.h5"
@@ -253,7 +253,7 @@ def load_diabetes_model():
 def predict_diabetes(input_data: dict) -> dict:
     load_diabetes_model()
 
-    # Map frontend keys to training feature names
+    
     key_map = {
         "pregnancies":       "Pregnancies",
         "glucose":           "Glucose",
@@ -268,7 +268,7 @@ def predict_diabetes(input_data: dict) -> dict:
         float(input_data[k]) for k in key_map.keys()
     ]], dtype=np.float32)
 
-    # Scale using saved scaler params
+   
     arr = (arr - _diabetes_scaler["mean"]) / _diabetes_scaler["scale"]
 
     prob = float(_diabetes_model.predict(arr, verbose=0)[0][0])
