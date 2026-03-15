@@ -189,6 +189,100 @@ def load_skin_models():
     print(f"[Skin] Ensemble ready — {len(_skin_models)} models")
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+#  DIABETES — Keras ANN
+# ══════════════════════════════════════════════════════════════════════════════
+
+DIABETES_REPO         = "SaswatML123/DiabetesModel"
+DIABETES_MODEL_FILE   = "diabetes_model.h5"
+DIABETES_SCALER_FILE  = "diabetes_scaler.json"
+DIABETES_FEATURE_COLS = [
+    "Pregnancies", "Glucose", "BloodPressure", "SkinThickness",
+    "Insulin", "BMI", "DiabetesPedigreeFunction", "Age"
+]
+_diabetes_model  = None
+_diabetes_scaler = None
+
+
+def _build_diabetes_model():
+    import tensorflow as tf
+    from tensorflow.keras import layers
+    model = tf.keras.Sequential([
+        layers.Input(shape=(8,)),
+        layers.Dense(256),
+        layers.BatchNormalization(),
+        layers.Activation("relu"),
+        layers.Dropout(0.3),
+        layers.Dense(128),
+        layers.BatchNormalization(),
+        layers.Activation("relu"),
+        layers.Dropout(0.3),
+        layers.Dense(64),
+        layers.BatchNormalization(),
+        layers.Activation("relu"),
+        layers.Dropout(0.2),
+        layers.Dense(32),
+        layers.Activation("relu"),
+        layers.Dense(1, activation="sigmoid")
+    ])
+    return model
+
+
+def load_diabetes_model():
+    global _diabetes_model, _diabetes_scaler
+    if _diabetes_model is not None:
+        return
+    import json
+    import tensorflow as tf
+
+    print("[Diabetes] Loading model...")
+    model_path  = _download(DIABETES_REPO, DIABETES_MODEL_FILE)
+    scaler_path = _download(DIABETES_REPO, DIABETES_SCALER_FILE)
+    _diabetes_model = _build_diabetes_model()
+    _diabetes_model.load_weights(model_path)
+
+    with open(scaler_path) as f:
+        params = json.load(f)
+    _diabetes_scaler = {
+        "mean":  np.array(params["mean"]),
+        "scale": np.array(params["scale"]),
+    }
+    print("[Diabetes] ✓ Ready")
+
+
+def predict_diabetes(input_data: dict) -> dict:
+    load_diabetes_model()
+
+    # Map frontend keys to training feature names
+    key_map = {
+        "pregnancies":       "Pregnancies",
+        "glucose":           "Glucose",
+        "blood_pressure":    "BloodPressure",
+        "skin_thickness":    "SkinThickness",
+        "insulin":           "Insulin",
+        "bmi":               "BMI",
+        "diabetes_pedigree": "DiabetesPedigreeFunction",
+        "age":               "Age",
+    }
+    arr = np.array([[
+        float(input_data[k]) for k in key_map.keys()
+    ]], dtype=np.float32)
+
+    # Scale using saved scaler params
+    arr = (arr - _diabetes_scaler["mean"]) / _diabetes_scaler["scale"]
+
+    prob = float(_diabetes_model.predict(arr, verbose=0)[0][0])
+
+    return {
+        "label":         "DIABETIC" if prob >= 0.5 else "NON-DIABETIC",
+        "confidence":    round(prob if prob >= 0.5 else 1 - prob, 4),
+        "probabilities": {
+            "NON-DIABETIC": round(1 - prob, 4),
+            "DIABETIC":     round(prob, 4),
+        },
+    }
+
+
 def predict_skin(image: Image.Image) -> dict:
     import torch
     import torch.nn.functional as F

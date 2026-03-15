@@ -6,13 +6,14 @@ Port 7860 (required by HuggingFace Spaces)
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from contextlib import asynccontextmanager
 from PIL import Image
 import io
 
 from model_loader import (
-    load_pneumo_model, load_skin_models,
-    predict_pneumonia, predict_skin
+    load_pneumo_model, load_skin_models, load_diabetes_model,
+    predict_pneumonia, predict_skin, predict_diabetes
 )
 
 
@@ -23,6 +24,7 @@ async def lifespan(app: FastAPI):
     print("=" * 50)
     load_pneumo_model()
     load_skin_models()
+    load_diabetes_model()
     print("=" * 50)
     print("  All models ready!")
     print("=" * 50)
@@ -43,6 +45,17 @@ app.add_middleware(
 )
 
 
+class DiabetesInput(BaseModel):
+    pregnancies:       float
+    glucose:           float
+    blood_pressure:    float
+    skin_thickness:    float
+    insulin:           float
+    bmi:               float
+    diabetes_pedigree: float
+    age:               float
+
+
 @app.get("/")
 def root():
     return {
@@ -50,6 +63,7 @@ def root():
         "endpoints": {
             "pneumonia": "POST /predict/pneumonia",
             "skin":      "POST /predict/skin",
+            "diabetes":  "POST /predict/diabetes",
             "docs":      "/docs",
         }
     }
@@ -86,6 +100,14 @@ async def skin_endpoint(file: UploadFile = File(...)):
         raise HTTPException(400, "Could not read image.")
     try:
         return predict_skin(image)
+    except Exception as e:
+        raise HTTPException(500, f"Inference error: {e}")
+
+
+@app.post("/predict/diabetes")
+async def diabetes_endpoint(payload: DiabetesInput):
+    try:
+        return predict_diabetes(payload.dict())
     except Exception as e:
         raise HTTPException(500, f"Inference error: {e}")
 
